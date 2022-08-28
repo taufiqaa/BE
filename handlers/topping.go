@@ -41,9 +41,6 @@ func (h *handlerTopping) FindToppings(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create Embed Path File on Image property here ...
-	for i, p := range toppings {
-		toppings[i].Image = topping_path_file + p.Image
-	}
 
 	w.WriteHeader(http.StatusOK)
 	response := dto.SuccessResult{Status: "success", Data: toppings}
@@ -65,7 +62,6 @@ func (h *handlerTopping) GetTopping(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create Embed Path File on Image property here ...
-	topping.Image = topping_path_file + topping.Image
 
 	w.WriteHeader(http.StatusOK)
 	response := dto.SuccessResult{Status: "success", Data: convertResponseTopping(topping)}
