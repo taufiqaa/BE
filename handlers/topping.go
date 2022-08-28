@@ -1,14 +1,19 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	dto "waysbuck-API/dto/result"
 	toppingdto "waysbuck-API/dto/topping"
 	"waysbuck-API/models"
 	"waysbuck-API/repositories"
 
+	"github.com/cloudinary/cloudinary-go/v2"
+	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 )
@@ -73,7 +78,7 @@ func (h *handlerTopping) CreateTopping(w http.ResponseWriter, r *http.Request) {
 	// Get Data for User Token
 	// Get dataFile from midleware and store to filename variable here
 	dataContex := r.Context().Value("dataFile") // add this code
-	filename := dataContex.(string)             // add this code
+	filepath := dataContex.(string)             // add this code
 
 	price, _ := strconv.Atoi(r.FormValue("price"))
 	qty, _ := strconv.Atoi(r.FormValue("qty"))
@@ -81,6 +86,7 @@ func (h *handlerTopping) CreateTopping(w http.ResponseWriter, r *http.Request) {
 		Title: r.FormValue("title"),
 		Price: price,
 		Qty:   qty,
+		Image: filepath,
 	}
 
 	validation := validator.New()
@@ -92,10 +98,25 @@ func (h *handlerTopping) CreateTopping(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var ctx = context.Background()
+	var CLOUD_NAME = os.Getenv("CLOUD_NAME")
+	var API_KEY = os.Getenv("API_KEY")
+	var API_SECRET = os.Getenv("API_SECRET")
+
+	// Add your Cloudinary credentials ...
+	cld, _ := cloudinary.NewFromParams(CLOUD_NAME, API_KEY, API_SECRET)
+
+	// Upload file to Cloudinary ...
+	resp, err := cld.Upload.Upload(ctx, filepath, uploader.UploadParams{Folder: "Waysbuck"})
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
 	topping := models.Topping{
 		Title: request.Title,
 		Price: request.Price,
-		Image: filename,
+		Image: resp.SecureURL,
 	}
 
 	// err := mysql.DB.Create(&product).Error
@@ -120,7 +141,7 @@ func (h *handlerTopping) UpdateTopping(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 
 	dataContex := r.Context().Value("dataFile")
-	filename := dataContex.(string)
+	filepath := dataContex.(string)
 
 	price, _ := strconv.Atoi(r.FormValue("price"))
 	qty, _ := strconv.Atoi(r.FormValue("qty"))
@@ -129,6 +150,7 @@ func (h *handlerTopping) UpdateTopping(w http.ResponseWriter, r *http.Request) {
 		Title: r.FormValue("title"),
 		Price: price,
 		Qty:   qty,
+		Image: filepath,
 	}
 
 	validation := validator.New()
@@ -146,8 +168,8 @@ func (h *handlerTopping) UpdateTopping(w http.ResponseWriter, r *http.Request) {
 	topping.Title = request.Title
 	topping.Price = request.Price
 
-	if filename != "false" {
-		topping.Image = filename
+	if filepath != "false" {
+		topping.Image = filepath
 	}
 
 	topping, err = h.ToppingRepository.UpdateTopping(topping)
