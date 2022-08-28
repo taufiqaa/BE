@@ -13,7 +13,7 @@ func CartRoutes(r *mux.Router) {
 	cartRepository := repositories.RepositoryTopping(mysql.DB)
 	h := handlers.HandlerCart(cartRepository)
 
-	r.HandleFunc("/cartsall", middleware.Auth(h.FindCarts)).Methods("GET")
+	r.HandleFunc("/cartsall", h.FindCarts).Methods("GET")
 	r.HandleFunc("/cart/{id}", middleware.Auth(h.GetCart)).Methods("GET")
 	r.HandleFunc("/carts", middleware.Auth(h.FindCartsByID)).Methods("GET")
 	r.HandleFunc("/cart", middleware.Auth(h.CreateCart)).Methods("POST")
